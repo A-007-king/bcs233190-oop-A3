@@ -1,31 +1,266 @@
-﻿
-Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.8.34330.188
-MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BCS233190 Theory Assignment 04", "BCS233190 Theory Assignment 04\BCS233190 Theory Assignment 04.vcxproj", "{4EAD2BD0-67F2-486D-84A0-3478B2FD2FE1}"
-EndProject
-Global
-	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|x64 = Debug|x64
-		Debug|x86 = Debug|x86
-		Release|x64 = Release|x64
-		Release|x86 = Release|x86
-	EndGlobalSection
-	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{4EAD2BD0-67F2-486D-84A0-3478B2FD2FE1}.Debug|x64.ActiveCfg = Debug|x64
-		{4EAD2BD0-67F2-486D-84A0-3478B2FD2FE1}.Debug|x64.Build.0 = Debug|x64
-		{4EAD2BD0-67F2-486D-84A0-3478B2FD2FE1}.Debug|x86.ActiveCfg = Debug|Win32
-		{4EAD2BD0-67F2-486D-84A0-3478B2FD2FE1}.Debug|x86.Build.0 = Debug|Win32
-		{4EAD2BD0-67F2-486D-84A0-3478B2FD2FE1}.Release|x64.ActiveCfg = Release|x64
-		{4EAD2BD0-67F2-486D-84A0-3478B2FD2FE1}.Release|x64.Build.0 = Release|x64
-		{4EAD2BD0-67F2-486D-84A0-3478B2FD2FE1}.Release|x86.ActiveCfg = Release|Win32
-		{4EAD2BD0-67F2-486D-84A0-3478B2FD2FE1}.Release|x86.Build.0 = Release|Win32
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {7FF5EA3C-03FB-4D84-AB10-5D1B1FD8B95C}
-	EndGlobalSection
-EndGlobal
+﻿#include <iostream>
+#include <string>
+using namespace std;
+
+class Item 
+{
+protected:
+    int itemID;
+    string title;
+    bool availability;
+
+public:
+    Item(int id, const string& title) : itemID(id), title(title), availability(true) {}
+    virtual ~Item() = default;
+
+    virtual string getItemDetails() const = 0;
+    virtual bool checkAvailability() const = 0;
+    virtual void checkOut() = 0;
+    virtual void checkIn() = 0;
+
+    int getItemID() const 
+    { 
+        return itemID;
+    }
+    const string& getTitle() const
+    {
+        return title; 
+    }
+};
+
+class Book : public Item 
+{
+private:
+    string author;
+    string ISBN;
+
+public:
+    Book(int id, const string& title, const string& author, const string& ISBN)
+        : Item(id, title), author(author), ISBN(ISBN) {}
+
+    string getItemDetails() const override 
+    {
+        return "Book: " + title + " by " + author + " (ISBN: " + ISBN + ")";
+    }
+
+    bool checkAvailability() const override 
+    {
+        return availability;
+    }
+
+    void checkOut() override
+    {
+        availability = false;
+    }
+
+    void checkIn() override {
+        availability = true;
+    }
+
+    const string& getAuthor() const
+    { 
+        return author;
+    }
+    const string& getISBN() const
+    { 
+        return ISBN;
+    }
+};
+
+class Journal : public Item 
+{
+private:
+    string publisher;
+    int issueNumber;
+
+public:
+    Journal(int id, const string& title, const string& publisher, int issueNumber)
+        : Item(id, title), publisher(publisher), issueNumber(issueNumber) {}
+
+    string getItemDetails() const override
+    {
+        return "Journal: " + title + " published by " + publisher + " (Issue: " + std::to_string(issueNumber) + ")";
+    }
+
+    bool checkAvailability() const override 
+    {
+        return availability;
+    }
+
+    void checkOut() override
+    {
+        availability = false;
+    }
+
+    void checkIn() override
+    {
+        availability = true;
+    }
+
+    const string& getPublisher() const 
+    { 
+        return publisher;
+    }
+    int getIssueNumber() const
+    {
+        return issueNumber; 
+    }
+};
+
+class Member
+{
+private:
+    int memberID;
+    string name;
+    string contactInfo;
+    int loanLimit;
+    int* loanHistory;
+    int loanHistorySize;
+
+public:
+    Member(int id, const string& name, const string& contactInfo, int loanLimit)
+        : memberID(id), name(name), contactInfo(contactInfo), loanLimit(loanLimit), loanHistory(nullptr), loanHistorySize(0) {}
+
+    ~Member() 
+    {
+        delete[] loanHistory;
+    }
+
+    void borrowItem(int itemID) 
+    {
+        if (loanHistorySize < loanLimit) 
+        {
+            int* newLoanHistory = new int[loanHistorySize + 1];
+            for (int i = 0; i < loanHistorySize; i++)
+            {
+                newLoanHistory[i] = loanHistory[i];
+            }
+            newLoanHistory[loanHistorySize] = itemID;
+            delete[] loanHistory;
+            loanHistory = newLoanHistory;
+            loanHistorySize++;
+            cout << name << " borrowed item ID: " << itemID << endl;
+        }
+        else
+        {
+            cout << "Loan limit reached for member: " << name << endl;
+        }
+    }
+
+    void returnItem(int itemID)
+    {
+        bool found = false;
+        for (int i = 0; i < loanHistorySize; i++)
+        {
+            if (loanHistory[i] == itemID) 
+            {
+                found = true;
+                for (int j = i; j < loanHistorySize - 1; j++) 
+                {
+                    loanHistory[j] = loanHistory[j + 1];
+                }
+                loanHistorySize--;
+                cout << name << " returned item ID: " << itemID << endl;
+                break;
+            }
+        }
+        if (!found) 
+        {
+            cout << "Item ID: " << itemID << " not found in loan history." << endl;
+        }
+    }
+
+    const int* getLoanHistory() const 
+    {
+        return loanHistory;
+    }
+
+    int getLoanHistorySize() const
+    {
+        return loanHistorySize;
+    }
+};
+
+class Loan 
+{
+private:
+    int loanID;
+    Item* item;
+    Member* member;
+    int dueDate; // Simple integer to represent due date (e.g., days from today)
+    int actualReturnDate; // Simple integer for actual return date
+
+public:
+    Loan(int id, Item* item, Member* member, int dueDate)
+        : loanID(id), item(item), member(member), dueDate(dueDate), actualReturnDate(0) {}
+
+    void returnItem()
+    {
+        actualReturnDate = dueDate + 7; // Assume item is returned after 7 days for demonstration
+        item->checkIn();
+        cout << "Item returned." << endl;
+    }
+
+    double calculateFine() const 
+    {
+        if (actualReturnDate > dueDate) 
+        {
+            double finePerDay = 0.50; // Example fine rate
+            double daysOverdue = actualReturnDate - dueDate;
+            return finePerDay * daysOverdue;
+        }
+        return 0.0;
+    }
+
+    Item* getItem() const 
+    {
+        return item;
+    }
+};
+
+void searchItems(Item** items, int numItems, const string& query)
+{
+    for (int i = 0; i < numItems; i++)
+    {
+        if (items[i]->getTitle().find(query) != string::npos ||
+            (dynamic_cast<Book*>(items[i]) && dynamic_cast<Book*>(items[i])->getAuthor().find(query) != string::npos) ||
+            (dynamic_cast<Book*>(items[i]) && dynamic_cast<Book*>(items[i])->getISBN().find(query) != string::npos)) {
+            cout << items[i]->getItemDetails() << endl;
+        }
+    }
+}
+
+void generateOverdueReport(Loan* loans, int numLoans) 
+{
+    for (int i = 0; i < numLoans; i++)
+    {
+        if (loans[i].calculateFine() > 0) 
+        {
+            cout << "Overdue Item ID: " << loans[i].getItem()->getItemID() << endl;
+        }
+    }
+}
+
+int main()
+{
+    // Example usage
+    Book book1(1, "Book 1", "Author 1", "ISBN1");
+    Journal journal1(2, "Journal 1", "Publisher 1", 1);
+    Item* items[2] = { &book1, &journal1 };
+    int numItems = 2;
+
+    Member member1(1, "Member 1", "contact1@example.com", 3);
+    Loan loan1(1, &book1, &member1, 7); // Due date in 7 days
+
+    member1.borrowItem(book1.getItemID());
+    loan1.returnItem();
+
+    cout << "Search Results for 'Book':" << endl;
+    searchItems(items, numItems, "Book");
+
+    Loan loans[1] = { loan1 };
+    int numLoans = 1;
+    generateOverdueReport(loans, numLoans);
+
+    return 0;
+}
